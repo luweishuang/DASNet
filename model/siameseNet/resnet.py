@@ -129,9 +129,7 @@ class ResNet(nn.Module):
         for Synchronized Cross-GPU BachNormalization).
 
     Reference:
-
         - He, Kaiming, et al. "Deep residual learning for image recognition." Proceedings of the IEEE conference on computer vision and pattern recognition. 2016.
-
         - Yu, Fisher, and Vladlen Koltun. "Multi-scale context aggregation by dilated convolutions."
     """
     # pylint: disable=unused-variable
@@ -222,7 +220,6 @@ class ResNet(nn.Module):
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
-
         return x
 
 
@@ -238,7 +235,7 @@ def resnet18(pretrained=False, **kwargs):
     return model
 
 
-def resnet34(pretrained=False, root='/home/lhf/yzy/cd_res/pretrain',**kwargs):
+def resnet34(pretrained=False, root='/home/lhf/yzy/cd_res/pretrain', **kwargs):
     """Constructs a ResNet-34 model.
 
     Args:
@@ -258,7 +255,7 @@ def resnet50(pretrained=True, root='/home/lhf/yzy/cd_res/pretrain', **kwargs):
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model_pth = '/home/lhf/yzy/cd_res/pretrain/resnet50-19c8e357.pth'
+        model_pth = '/home/pfc/code/object_detect/DASNet/use/cd_res/pretrain/resnet50-19c8e357.pth'
         model.load_state_dict(torch.load(model_pth))
         print('load pretrained resnet50:', model_pth)
     return model
@@ -274,7 +271,7 @@ def resnet101(pretrained=False, root='/home/lhf/yzy/cd_res/pretrain', **kwargs):
     #Remove the following lines of comments
     #if u want to train from a pretrained model
     if pretrained:
-        model_pth = '/home/lhf/yzy/cd_res/pretrain/resnet101-5d3b4d8f.pth'
+        model_pth = '/home/pfc/code/object_detect/DASNet/use/cd_res/pretrain/resnet101-5d3b4d8f.pth'
         model.load_state_dict(torch.load(model_pth))
         print('load pretrained resnet101:', model_pth)
     return model
@@ -292,6 +289,7 @@ def resnet152(pretrained=False, root='~/.encoding/models', **kwargs):
         model.load_state_dict(torch.load(
             '/home/lhf/yzy/cd_res/pretrain/resnet152-b121ed2d.pth'), strict=False)
     return model
+
 
 if __name__ == '__main__':
     m=resnet34()

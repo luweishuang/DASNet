@@ -16,7 +16,9 @@
 #
 
 import numpy as np
-import pylab
+from matplotlib import pylab
+# from pylab import *
+# import pylab
 import os
 import cv2
 

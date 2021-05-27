@@ -1,14 +1,7 @@
-###########################################################################
-# Created by: CASIA IVA
-# Email: jliu@nlpr.ia.ac.cn
-# Copyright (c) 2018
-###########################################################################
 from __future__ import division
-import os
-import numpy as np
-import torch
+import os, sys
 import torch.nn as nn
-from torch.nn.functional import upsample, normalize
+sys.path.append(os.path.abspath(os.path.dirname(__file__)) )
 from attention import PAM_Module
 from attention import CAM_Module
 from resbase import BaseNet
@@ -32,24 +25,18 @@ class DANet(BaseNet):
 
 
     Reference:
-
         Long, Jonathan, Evan Shelhamer, and Trevor Darrell. "Fully convolutional networks
         for semantic segmentation." *CVPR*, 2015
-
     """
-
     def __init__(self, nclass, backbone, norm_layer=nn.BatchNorm2d, **kwargs):
         super(DANet, self).__init__(nclass, backbone, norm_layer=norm_layer, **kwargs)
         self.head = DANetHead(2048, nclass, norm_layer)
 
     def forward(self, x):
-
         _, _, c3, c4 = self.base_forward(x)
-
         x = self.head(c4)
         x = list(x)
-
-        return x[0],x[1],x[2]
+        return x[0], x[1], x[2]
 
 
 class DANetHead(nn.Module):
@@ -72,10 +59,8 @@ class DANetHead(nn.Module):
         self.conv52 = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                     norm_layer(inter_channels),
                                     nn.ReLU())
-
         self.conv6 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(512, out_channels, 1))
         self.conv7 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(512, out_channels, 1))
-
         self.conv8 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(512, out_channels, 1))
 
     def forward(self, x):
@@ -89,43 +74,31 @@ class DANetHead(nn.Module):
         sc_output = self.conv7(sc_conv)
 
         feat_sum = sa_conv + sc_conv
-
         sasc_output = self.conv8(feat_sum)
+        return sa_output, sc_output, sasc_output
 
-        return sa_output,sc_output,sasc_output
 
 def cnn():
     model = DANet(512, backbone='resnet50')
     return model
 
+
 class SiameseNet(nn.Module):
-    def __init__(self,norm_flag = 'l2'):
+    def __init__(self, norm_flag='l2'):
         super(SiameseNet, self).__init__()
         self.CNN = cnn()
         if norm_flag == 'l2':
            self.norm = F.normalize
         if norm_flag == 'exp':
             self.norm = nn.Softmax2d()
-    '''''''''
-    def forward(self,t0,t1):
-        out_t0_embedding = self.CNN(t0)
-        out_t1_embedding = self.CNN(t1)
-        #out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5),self.norm(out_t1_conv5)
-        #out_t0_fc7_norm,out_t1_fc7_norm = self.norm(out_t0_fc7),self.norm(out_t1_fc7)
-        out_t0_embedding_norm,out_t1_embedding_norm = self.norm(out_t0_embedding),self.norm(out_t1_embedding)
-        return [out_t0_embedding_norm,out_t1_embedding_norm]
-    '''''''''
 
-    def forward(self,t0,t1):
-
-
-
-        out_t0_conv5,out_t0_fc7,out_t0_embedding = self.CNN(t0)
-        out_t1_conv5,out_t1_fc7,out_t1_embedding = self.CNN(t1)
-        out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5,2,dim=1),self.norm(out_t1_conv5,2,dim=1)
-        out_t0_fc7_norm,out_t1_fc7_norm = self.norm(out_t0_fc7,2,dim=1),self.norm(out_t1_fc7,2,dim=1)
-        out_t0_embedding_norm,out_t1_embedding_norm = self.norm(out_t0_embedding,2,dim=1),self.norm(out_t1_embedding,2,dim=1)
-        return [out_t0_conv5_norm,out_t1_conv5_norm],[out_t0_fc7_norm,out_t1_fc7_norm],[out_t0_embedding_norm,out_t1_embedding_norm]
+    def forward(self, t0, t1):
+        out_t0_conv5, out_t0_fc7, out_t0_embedding = self.CNN(t0)
+        out_t1_conv5, out_t1_fc7, out_t1_embedding = self.CNN(t1)
+        out_t0_conv5_norm, out_t1_conv5_norm = self.norm(out_t0_conv5, 2, dim=1), self.norm(out_t1_conv5, 2, dim=1)
+        out_t0_fc7_norm, out_t1_fc7_norm = self.norm(out_t0_fc7, 2, dim=1), self.norm(out_t1_fc7, 2, dim=1)
+        out_t0_embedding_norm, out_t1_embedding_norm = self.norm(out_t0_embedding, 2, dim=1), self.norm(out_t1_embedding, 2, dim=1)
+        return [out_t0_conv5_norm, out_t1_conv5_norm], [out_t0_fc7_norm, out_t1_fc7_norm], [out_t0_embedding_norm, out_t1_embedding_norm]
 
 
 if __name__ == '__main__':

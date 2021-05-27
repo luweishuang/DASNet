@@ -1,14 +1,10 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.init as init
-import layer.function as fun
 from attention import *
 
+
 def convert_dict_names_for_fucking_faults():
-
    deeplab_v2_dict_names_mapping = {
-
       'conv1.0' : 'conv1_1',
       'conv1.2' : 'conv1_2',
       'conv2.0' : 'conv2_1',
@@ -22,7 +18,6 @@ def convert_dict_names_for_fucking_faults():
       'conv5.0' : 'conv5_1',
       'conv5.2' : 'conv5_2',
       'conv5.4' : 'conv5_3'}
-
    return deeplab_v2_dict_names_mapping
 
 
@@ -75,13 +70,9 @@ class deeplab_V2(nn.Module):
 
         )
         inter_channels = 512 // 4
-        self.conv5a = nn.Sequential(nn.Conv2d(512, inter_channels, 3, padding=1, bias=False),
+        self.conv5a = nn.Sequential(nn.Conv2d(512, inter_channels, 3, padding=1, bias=False), nn.ReLU())
 
-                                   nn.ReLU())
-
-        self.conv5c = nn.Sequential(nn.Conv2d(512, inter_channels, 3, padding=1, bias=False),
-
-                                   nn.ReLU())
+        self.conv5c = nn.Sequential(nn.Conv2d(512, inter_channels, 3, padding=1, bias=False), nn.ReLU())
 
         self.sa = PAM_Module(inter_channels)
         self.sc = CAM_Module(inter_channels)
@@ -96,8 +87,6 @@ class deeplab_V2(nn.Module):
         self.conv7 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(128, 128, 1))
 
         self.conv8 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(128, 128, 1))
-
-
 
         ####### multi-scale contexts #######
         ####### dialtion = 6 ##########
@@ -148,8 +137,7 @@ class deeplab_V2(nn.Module):
         #self.fc8 = nn.Softmax2d()
         #self.fc8 = fun.l2normalization(scale=1)
 
-    def forward(self,x):
-
+    def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
         conv3_feature = self.conv3(x)
@@ -165,34 +153,20 @@ class deeplab_V2(nn.Module):
         sc_output = self.conv7(sc_conv)
 
         feat_sum = sa_conv + sc_conv
-
         sasc_output = self.conv8(feat_sum)
-
         return sa_output,sc_output,sasc_output
 
 
 class SiameseNet(nn.Module):
-    def __init__(self,norm_flag = 'l2'):
+    def __init__(self, norm_flag = 'l2'):
         super(SiameseNet, self).__init__()
         self.CNN = deeplab_V2()
         if norm_flag == 'l2':
            self.norm = F.normalize
         if norm_flag == 'exp':
             self.norm = nn.Softmax2d()
-    '''''''''
-    def forward(self,t0,t1):
-        out_t0_embedding = self.CNN(t0)
-        out_t1_embedding = self.CNN(t1)
-        #out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5),self.norm(out_t1_conv5)
-        #out_t0_fc7_norm,out_t1_fc7_norm = self.norm(out_t0_fc7),self.norm(out_t1_fc7)
-        out_t0_embedding_norm,out_t1_embedding_norm = self.norm(out_t0_embedding),self.norm(out_t1_embedding)
-        return [out_t0_embedding_norm,out_t1_embedding_norm]
-    '''''''''
 
     def forward(self,t0,t1):
-
-
-
         out_t0_conv5,out_t0_fc7,out_t0_embedding = self.CNN(t0)
         out_t1_conv5,out_t1_fc7,out_t1_embedding = self.CNN(t1)
         out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5,2,dim=1),self.norm(out_t1_conv5,2,dim=1)
@@ -200,28 +174,7 @@ class SiameseNet(nn.Module):
         out_t0_embedding_norm,out_t1_embedding_norm = self.norm(out_t0_embedding,2,dim=1),self.norm(out_t1_embedding,2,dim=1)
         return [out_t0_conv5_norm,out_t1_conv5_norm],[out_t0_fc7_norm,out_t1_fc7_norm],[out_t0_embedding_norm,out_t1_embedding_norm]
 
-    '''''''''
-    def forward(self,t0,t1):
-        out_t0_conv4,out_t0_conv5,out_t0_fc7,out_t0_embedding = self.CNN(t0)
-        out_t1_conv4,out_t1_conv5,out_t1_fc7,out_t1_embedding = self.CNN(t1)
-        out_t0_conv4_norm,out_t1_conv4_norm = self.norm(out_t0_conv5),self.norm(out_t1_conv5)
-        out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5),self.norm(out_t1_conv5)
-        out_t0_fc7_norm,out_t1_fc7_norm = self.norm(out_t0_fc7),self.norm(out_t1_fc7)
-        out_t0_embedding_norm,out_t1_embedding_norm = self.norm(out_t0_embedding),self.norm(out_t1_embedding)
-        return [out_t0_conv4_norm,out_t1_conv4_norm],[out_t0_conv5_norm,out_t1_conv5_norm],[out_t0_fc7_norm,out_t1_fc7_norm],[out_t0_embedding_norm,out_t1_embedding_norm]
-    '''''''''
-    '''''''''
-    def forward(self,t0,t1):
-        out_t0_conv4,out_t0_conv5,out_t0_fc7 = self.CNN(t0)
-        out_t1_conv4,out_t1_conv5,out_t1_fc7 = self.CNN(t1)
-        out_t0_conv4_norm,out_t1_conv4_norm = self.norm(out_t0_conv4),self.norm(out_t1_conv4)
-        out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5),self.norm(out_t1_conv5)
-        out_t0_fc7_norm,out_t1_fc7_norm = self.norm(out_t0_fc7),self.norm(out_t1_fc7)
-        return [out_t0_conv4_norm,out_t1_conv4_norm],[out_t0_conv5_norm,out_t1_conv5_norm],[out_t0_fc7_norm,out_t1_fc7_norm]
-    '''''''''
-
     def init_parameters_from_deeplab(self,pretrain_vgg16_1024):
-
         ##### init parameter using pretrain vgg16 model ###########
         pretrain_dict_names = convert_dict_names_for_fucking_faults()
         keys = sorted(pretrain_dict_names.keys())
@@ -265,8 +218,7 @@ class SiameseNet(nn.Module):
         #init.kaiming_uniform(self.CNN.embedding_layer.weight.data,mode='fan_in')
         #init.constant(self.CNN.embedding_layer.bias.data,0)
 
-    def init_parameters(self,pretrain_vgg16_1024):
-
+    def init_parameters(self, pretrain_vgg16_1024):
         ##### init parameter using pretrain vgg16 model ###########
         conv_blocks = [self.CNN.conv1,
                        self.CNN.conv2,
@@ -293,6 +245,7 @@ class SiameseNet(nn.Module):
         self.CNN.fc7[0].weight.data = pretrain_vgg16_1024.classifier[3].weight.data.view(self.CNN.fc7[0].weight.size())
         self.CNN.fc7[0].bias.data = pretrain_vgg16_1024.classifier[3].bias.data.view(self.CNN.fc7[0].bias.size())
 
+
 if __name__ == '__main__':
-    net= deeplab_V2()
+    net = deeplab_V2()
     print('hh')

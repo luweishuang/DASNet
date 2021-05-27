@@ -16,14 +16,17 @@ IMG_EXTENSIONS = [
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP', '.tif',
 ]
 
+
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
+
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
     with open(path, 'rb') as f:
         with Image.open(f) as img:
             return img.convert('RGB')
+
 
 def accimage_loader(path):
     import accimage
@@ -32,6 +35,7 @@ def accimage_loader(path):
     except IOError:
         # Potentially a decoding problem, fall back to PIL.Image
         return pil_loader(path)
+
 
 def default_loader(path):
     from torchvision import get_image_backend
@@ -46,14 +50,14 @@ def colorize_mask(mask):
     # mask: numpy array of the mask
     new_mask = Image.fromarray(mask.astype(np.uint8)).convert('P')
     new_mask.putpalette(palette)
-
     return new_mask
+
 
 def get_pascal_labels():
     return np.asarray([[0,0,0],[0,0,255]])
 
-def decode_segmap(temp, plot=False):
 
+def decode_segmap(temp, plot=False):
     label_colours = get_pascal_labels()
     r = temp.copy()
     g = temp.copy()
@@ -78,15 +82,13 @@ def decode_segmap(temp, plot=False):
 #### upon request is shown in http://ghsi.github.io/proj/RSS2016.html ####
 #### more details are presented in http://ghsi.github.io/assets/pdfs/alcantarilla16rss.pdf ###
 
+
 class Dataset(Dataset):
-
-    def __init__(self,img_path,label_path,file_name_txt_path,split_flag, transform=True, transform_med = None):
-
+    def __init__(self, img_path, label_path, file_name_txt_path, split_flag, transform=True, transform_med=None):
         self.label_path = label_path
         self.img_path = img_path
-        #self.img2_path = img2_path
         self.img_txt_path = file_name_txt_path
-        self.imgs_path_list = np.loadtxt(self.img_txt_path,dtype=str)
+        self.imgs_path_list = np.loadtxt(self.img_txt_path, dtype=str)
         self.flag = split_flag
         self.transform = transform
         self.transform_med = transform_med

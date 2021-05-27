@@ -12,9 +12,7 @@ import time
 import datetime
 import cv2
 import dataset.rs as dates
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
+import model.siameseNet.dares as models
 
 
 def check_dir(dir):
@@ -31,8 +29,8 @@ def various_distance(out_vec_t0, out_vec_t1,dist_flag):
         distance = 1 - F.cosine_similarity(out_vec_t0, out_vec_t1)
     return distance
 
-def single_layer_similar_heatmap_visual(output_t0,output_t1,save_change_map_dir,epoch,filename,layer_flag,dist_flag):
 
+def single_layer_similar_heatmap_visual(output_t0, output_t1, save_change_map_dir,epoch,filename,layer_flag,dist_flag):
     fname = filename[7:12]
     n, c, h, w = output_t0.data.shape
     out_t0_rz = torch.transpose(output_t0.view(c, h * w), 1, 0)
@@ -48,7 +46,6 @@ def single_layer_similar_heatmap_visual(output_t0,output_t1,save_change_map_dir,
     save_weight_fig_dir = os.path.join(save_change_map_dir_layer, fname + '.jpg')
     cv2.imwrite(save_weight_fig_dir, similar_dis_map_colorize)
     return similar_distance_map_rz.data.cpu().numpy()
-
 
 
 def validate(net, val_dataloader,save_change_map_dir,save_roc_dir):
@@ -124,20 +121,17 @@ def validate(net, val_dataloader,save_change_map_dir,save_roc_dir):
 
 
 def main():
-
     val_transform_det = trans.Compose([
-        trans.Scale(256,256),
+        trans.Scale(256, 256),
     ])
+    BASE_PATH = os.path.join(os.path.abspath(os.getcwd()), "use")
+    val_data = dates.Dataset(os.path.join(BASE_PATH, 'changedetection/ChangeDetectionDataset'), os.path.join(BASE_PATH, 'changedetection/ChangeDetectionDataset'),
+                             os.path.join(BASE_PATH, 'changedetection/ChangeDetectionDataset/val.txt'), 'val',
+                             transform=True, transform_med=val_transform_det)
+    val_loader = Data.DataLoader(val_data, batch_size=1, shuffle=False, num_workers=4, pin_memory=True)
 
-    val_data = dates.Dataset('/dataset', '/dataset',
-                             '/dataset/test.txt', 'val', transform=True,
-                             transform_med=val_transform_det)
-    val_loader = Data.DataLoader(val_data, batch_size=1,
-                                 shuffle=False, num_workers=4, pin_memory=True)
-    import model.siameseNet.dares as models
     model = models.SiameseNet(norm_flag='l2')
-    checkpoint = torch.load('the path to best model',
-                            map_location='cpu')
+    checkpoint = torch.load(os.path.join(BASE_PATH, 'cdout/bone/resnet50/mcanshu/ckpt/CDD_model_best.pth'), map_location='cpu')
     model.load_state_dict(checkpoint['state_dict'])
 
     print('load success')
@@ -150,6 +144,7 @@ def main():
     elapsed = round(time.time() - time_start)
     elapsed = str(datetime.timedelta(seconds=elapsed))
     print('Elapsed {}'.format(elapsed))
+
 
 if __name__ == '__main__':
    main()
