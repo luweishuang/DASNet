@@ -12,7 +12,7 @@ import time
 import datetime
 import cv2
 import dataset.rs as dates
-import model.siameseNet.dares as models
+
 
 
 def check_dir(dir):
@@ -130,6 +130,7 @@ def main():
                              transform=True, transform_med=val_transform_det)
     val_loader = Data.DataLoader(val_data, batch_size=1, shuffle=False, num_workers=4, pin_memory=True)
 
+    import model.siameseNet.dares as models
     model = models.SiameseNet(norm_flag='l2')
     checkpoint = torch.load(os.path.join(BASE_PATH, 'cdout/bone/resnet50/mcanshu/ckpt/CDD_model_best.pth'), map_location='cpu')
     model.load_state_dict(checkpoint['state_dict'])

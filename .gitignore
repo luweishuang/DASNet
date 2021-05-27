@@ -1,2 +1,9 @@
 .idea/
 use/
+cfg/__pycache__/
+dataset/__pycache__/
+layer/__pycache__/
+model/__pycache__/
+model/siameseNet/__pycache__/
+utils/__pycache__/
+
