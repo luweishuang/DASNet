@@ -2,13 +2,9 @@ import torch
 from torch.utils.data.dataset import Dataset
 import numpy as np
 import os
-import scipy.io
-import scipy.misc as m
 from PIL import Image
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
-import utils.transforms as trans
-import cv2
 import cfg.CDD as cfg
 
 IMG_EXTENSIONS = [

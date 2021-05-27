@@ -1,13 +1,5 @@
-import math
-import numpy as np
-
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn.functional import upsample
-from torch.nn.parallel.data_parallel import DataParallel
-from torch.nn.parallel.parallel_apply import parallel_apply
-from torch.nn.parallel.scatter_gather import scatter
+
 
 import resnet
 

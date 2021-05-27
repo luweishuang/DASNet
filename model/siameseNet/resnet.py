@@ -1,4 +1,5 @@
 """Dilated ResNet"""
+import os
 import math
 import torch
 import torch.utils.model_zoo as model_zoo
@@ -14,7 +15,7 @@ model_urls = {
     'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
-
+BASE_PATH = os.path.join(os.path.abspath(os.getcwd()), "use")
 
 def conv3x3(in_planes, out_planes, stride=1):
     "3x3 convolution with padding"
@@ -106,7 +107,6 @@ class Bottleneck(nn.Module):
 
         out += residual
         out = self.relu(out)
-
         return out
 
 
@@ -255,7 +255,7 @@ def resnet50(pretrained=True, root='/home/lhf/yzy/cd_res/pretrain', **kwargs):
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model_pth = '/home/pfc/code/object_detect/DASNet/use/cd_res/pretrain/resnet50-19c8e357.pth'
+        model_pth = os.path.join(BASE_PATH, 'cd_res/pretrain/resnet50-19c8e357.pth')
         model.load_state_dict(torch.load(model_pth))
         print('load pretrained resnet50:', model_pth)
     return model
@@ -271,7 +271,7 @@ def resnet101(pretrained=False, root='/home/lhf/yzy/cd_res/pretrain', **kwargs):
     #Remove the following lines of comments
     #if u want to train from a pretrained model
     if pretrained:
-        model_pth = '/home/pfc/code/object_detect/DASNet/use/cd_res/pretrain/resnet101-5d3b4d8f.pth'
+        model_pth = os.path.join(BASE_PATH, 'cd_res/pretrain/resnet101-5d3b4d8f.pth')
         model.load_state_dict(torch.load(model_pth))
         print('load pretrained resnet101:', model_pth)
     return model

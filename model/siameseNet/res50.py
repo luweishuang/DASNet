@@ -1,8 +1,5 @@
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-import torch.utils.model_zoo as model_zoo
-import torch
 import numpy as np
 from attention import *
 # affine_par = True  # True: BN has learnable affine parameters, False: without learnable affine parameters of BatchNorm Layer
@@ -50,7 +47,6 @@ class BasicBlock(nn.Module):
 
         out += residual
         out = self.relu(out)
-
         return out
 
 
@@ -119,7 +115,6 @@ class Residual_Covolution(nn.Module):
         inc2 = self.conv4(add1)
         out = x + self.relu(inc2)
         return out, seg
-
 
 
 class ResNet(nn.Module):
@@ -226,6 +221,7 @@ def PSPNet():
     model = ResNet(Bottleneck, [3, 4, 6, 3])
     return model
 
+
 class SiameseNet(nn.Module):
     def __init__(self,norm_flag = 'l2'):
         super(SiameseNet, self).__init__()
@@ -236,18 +232,9 @@ class SiameseNet(nn.Module):
             self.norm = nn.Softmax2d()
 
     def forward(self, t0, t1):
-
-
         out_t0_conv5,out_t0_fc7,out_t0_embedding = self.CNN(t0)
         out_t1_conv5,out_t1_fc7,out_t1_embedding = self.CNN(t1)
         out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5,2,dim=1),self.norm(out_t1_conv5,2,dim=1)
         out_t0_fc7_norm,out_t1_fc7_norm = self.norm(out_t0_fc7,2,dim=1),self.norm(out_t1_fc7,2,dim=1)
         out_t0_embedding_norm,out_t1_embedding_norm = self.norm(out_t0_embedding,2,dim=1),self.norm(out_t1_embedding,2,dim=1)
         return [out_t0_conv5_norm,out_t1_conv5_norm],[out_t0_fc7_norm,out_t1_fc7_norm],[out_t0_embedding_norm,out_t1_embedding_norm]
-
-        # out_t0_conv5, out_t0_embedding = self.CNN(t0)
-        # out_t1_conv5, out_t1_embedding = self.CNN(t1)
-        # out_t0_conv5_norm, out_t1_conv5_norm = self.norm(out_t0_conv5, 2, dim=1), self.norm(out_t1_conv5, 2, dim=1)
-        # out_t0_embedding_norm, out_t1_embedding_norm = self.norm(out_t0_embedding, 2, dim=1), self.norm(out_t1_embedding, 2,
-        #                                                                                                 dim=1)
-        # return [out_t0_conv5_norm, out_t1_conv5_norm],  [out_t0_embedding_norm,out_t1_embedding_norm]
