@@ -32,12 +32,13 @@ def main():
     save_change_map_dir = os.path.join(cfg.SAVE_PRED_PATH, 'contrastive_loss/changemaps/')
     save_roc_dir = os.path.join(cfg.SAVE_PRED_PATH, 'contrastive_loss/roc')
     time_start = time.time()
-    current_metric = validate(model, val_loader, 1, save_change_map_dir, save_roc_dir)
+    current_metric = validate(model, val_loader, 1, save_change_map_dir, save_roc_dir, cfg.TRANSFROM_SCALES)
     elapsed = round(time.time() - time_start)
     elapsed = str(datetime.timedelta(seconds=elapsed))
     print('Elapsed {}'.format(elapsed))
 
 
 if __name__ == '__main__':
-   main()
+    torch.backends.cudnn.enabled = False
+    main()
 

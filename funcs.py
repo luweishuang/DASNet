@@ -46,7 +46,7 @@ def single_layer_similar_heatmap_visual(output_t0, output_t1, save_change_map_di
     return similar_distance_map_rz.data.cpu().numpy()
 
 
-def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir):
+def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir, transform_scale):
     net.eval()
     with torch.no_grad():
         cont_conv5_total, cont_fc_total, cont_embedding_total, num = 0.0, 0.0, 0.0, 0.0
@@ -60,9 +60,9 @@ def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir):
             out_conv5_t0, out_conv5_t1 = out_conv5
             out_fc_t0, out_fc_t1 = out_fc
             out_embedding_t0, out_embedding_t1 = out_embedding
-            conv5_distance_map = single_layer_similar_heatmap_visual(out_conv5_t0, out_conv5_t1, save_change_map_dir, epoch, filename, 'conv5', 'l2', cfg.TRANSFROM_SCALES)
-            fc_distance_map = single_layer_similar_heatmap_visual(out_fc_t0, out_fc_t1, save_change_map_dir, epoch, filename, 'fc', 'l2', cfg.TRANSFROM_SCALES)
-            embedding_distance_map = single_layer_similar_heatmap_visual(out_embedding_t0, out_embedding_t1, save_change_map_dir, epoch, filename, 'embedding', 'l2', cfg.TRANSFROM_SCALES)
+            conv5_distance_map = single_layer_similar_heatmap_visual(out_conv5_t0, out_conv5_t1, save_change_map_dir, epoch, filename, 'conv5', 'l2', transform_scale)
+            fc_distance_map = single_layer_similar_heatmap_visual(out_fc_t0, out_fc_t1, save_change_map_dir, epoch, filename, 'fc', 'l2', transform_scale)
+            embedding_distance_map = single_layer_similar_heatmap_visual(out_embedding_t0, out_embedding_t1, save_change_map_dir, epoch, filename, 'embedding', 'l2', transform_scale)
             cont_conv5 = mc.RMS_Contrast(conv5_distance_map)
             cont_fc = mc.RMS_Contrast(fc_distance_map)
             cont_embedding = mc.RMS_Contrast(embedding_distance_map)
