@@ -61,7 +61,7 @@ def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir, tran
             out_conv5, out_fc, out_embedding = net(inputs1, input2)
             elapsed = round(time.time() - time_start)
             elapsed = str(datetime.timedelta(seconds=elapsed))
-            print('batch_idx: {}, validate net calc Elapsed {}'.format(batch_idx, elapsed))
+            # print('batch_idx: {}, validate net calc Elapsed {}'.format(batch_idx, elapsed))
             out_conv5_t0, out_conv5_t1 = out_conv5
             out_fc_t0, out_fc_t1 = out_fc
             out_embedding_t0, out_embedding_t1 = out_embedding
