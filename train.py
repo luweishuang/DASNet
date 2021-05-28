@@ -43,14 +43,14 @@ def various_distance(out_vec_t0, out_vec_t1,dist_flag):
     return distance
 
 
-def single_layer_similar_heatmap_visual(output_t0,output_t1,save_change_map_dir,epoch,filename,layer_flag,dist_flag):
-    # interp = nn.functional.interpolate(size=[cfg.TRANSFROM_SCALES[1],cfg.TRANSFROM_SCALES[0]], mode='bilinear')
+def single_layer_similar_heatmap_visual(output_t0, output_t1, save_change_map_dir, epoch, filename, layer_flag, dist_flag):
     n, c, h, w = output_t0.data.shape
+    print(n, c, h, w)
     out_t0_rz = torch.transpose(output_t0.view(c, h * w), 1, 0)
     out_t1_rz = torch.transpose(output_t1.view(c, h * w), 1, 0)
-    distance = various_distance(out_t0_rz,out_t1_rz,dist_flag=dist_flag)
-    similar_distance_map = distance.view(h,w).data.cpu().numpy()
-    similar_distance_map_rz = nn.functional.interpolate(torch.from_numpy(similar_distance_map[np.newaxis, np.newaxis, :]),size=[cfg.TRANSFROM_SCALES[1],cfg.TRANSFROM_SCALES[0]], mode='bilinear',align_corners=True)
+    distance = various_distance(out_t0_rz, out_t1_rz, dist_flag=dist_flag)
+    similar_distance_map = distance.view(h, w).data.cpu().numpy()
+    similar_distance_map_rz = nn.functional.interpolate(torch.from_numpy(similar_distance_map[np.newaxis, np.newaxis, :]), size=[cfg.TRANSFROM_SCALES[1],cfg.TRANSFROM_SCALES[0]], mode='bilinear',align_corners=True)
     similar_dis_map_colorize = cv2.applyColorMap(np.uint8(255 * similar_distance_map_rz.data.cpu().numpy()[0][0]), cv2.COLORMAP_JET)
     save_change_map_dir_ = os.path.join(save_change_map_dir, 'epoch_' + str(epoch))
     check_dir(save_change_map_dir_)
@@ -61,16 +61,16 @@ def single_layer_similar_heatmap_visual(output_t0,output_t1,save_change_map_dir,
     return similar_distance_map_rz.data.cpu().numpy()
 
 
-def validate(net, val_dataloader,epoch,save_change_map_dir,save_roc_dir):
+def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir):
     net.eval()
     with torch.no_grad():
-        cont_conv5_total,cont_fc_total,cont_embedding_total,num = 0.0,0.0,0.0,0.0
+        cont_conv5_total, cont_fc_total, cont_embedding_total, num = 0.0, 0.0, 0.0, 0.0
         metric_for_conditions = util.init_metric_for_class_for_cmu(1)
         for batch_idx, batch in enumerate(val_dataloader):
-            inputs1,input2, targets, filename, height, width = batch
+            inputs1, input2, targets, filename, height, width = batch
             height, width, filename = height.numpy()[0], width.numpy()[0], filename[0]
             if device.type == 'cuda':
-                inputs1, input2, targets = inputs1.cuda(),input2.cuda(), targets.cuda()
+                inputs1, input2, targets = inputs1.cuda(), input2.cuda(), targets.cuda()
             out_conv5, out_fc, out_embedding = net(inputs1, input2)
             out_conv5_t0, out_conv5_t1 = out_conv5
             out_fc_t0, out_fc_t1 = out_fc
@@ -131,12 +131,10 @@ def main():
     ######  load datasets ########
     train_transform_det = trans.Compose([trans.Scale(cfg.TRANSFROM_SCALES),])
     val_transform_det = trans.Compose([trans.Scale(cfg.TRANSFROM_SCALES),])
-    train_data = dates.Dataset(cfg.TRAIN_DATA_PATH, cfg.TRAIN_LABEL_PATH,
-                                cfg.TRAIN_TXT_PATH, 'train', transform=True, transform_med=train_transform_det)
+    train_data = dates.Dataset(cfg.TRAIN_DATA_PATH, cfg.TRAIN_LABEL_PATH, cfg.TRAIN_TXT_PATH, 'train', transform=True, transform_med=train_transform_det)
     train_loader = Data.DataLoader(train_data, batch_size=cfg.BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
-    val_data = dates.Dataset(cfg.VAL_DATA_PATH, cfg.VAL_LABEL_PATH,
-                            cfg.VAL_TXT_PATH, 'val', transform=True, transform_med=val_transform_det)
-    val_loader = Data.DataLoader(val_data, batch_size=4, shuffle=False, num_workers=4, pin_memory=True)
+    val_data = dates.Dataset(cfg.VAL_DATA_PATH, cfg.VAL_LABEL_PATH, cfg.VAL_TXT_PATH, 'val', transform=True, transform_med=val_transform_det)
+    val_loader = Data.DataLoader(val_data, batch_size=2, shuffle=False, num_workers=1, pin_memory=True)
     ######  build  models ########
     base_seg_model = 'resnet50'
     if base_seg_model == 'vgg':
@@ -187,10 +185,10 @@ def main():
              if device.type == 'cuda':
                  img1, img2, label = img1.cuda(), img2.cuda(), label.cuda()
              label = label.float()
-             out_conv5, out_fc, out_embedding = model(img1.cuda(), img2.cuda())
+             out_conv5, out_fc, out_embedding = model(img1, img2)
              out_conv5_t0, out_conv5_t1 = out_conv5
              out_fc_t0, out_fc_t1 = out_fc
-             out_embedding_t0,out_embedding_t1 = out_embedding
+             out_embedding_t0, out_embedding_t1 = out_embedding
              label_rz_conv5 = util.rz_label(label, size=out_conv5_t0.data.cpu().numpy().shape[2:])
              label_rz_fc = util.rz_label(label, size=out_fc_t0.data.cpu().numpy().shape[2:])
              label_rz_embedding = util.rz_label(label, size=out_embedding_t0.data.cpu().numpy().shape[2:])
@@ -212,7 +210,7 @@ def main():
                                                      contractive_loss_fc.item(),contractive_loss_embedding.item()))
              if (batch_idx) % 1000 == 0:
                  model.eval()
-                 current_metric = validate(model, val_loader, epoch,save_change_map_dir,save_roc_dir)
+                 current_metric = validate(model, val_loader, epoch, save_change_map_dir, save_roc_dir)
                  if current_metric > best_metric:
                      torch.save({'state_dict': model.state_dict()},
                              os.path.join(ab_test_dir, 'model' + str(epoch) + '.pth'))
