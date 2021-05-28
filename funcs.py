@@ -53,8 +53,6 @@ def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir, tran
         metric_for_conditions = util.init_metric_for_class_for_cmu(1)
         for batch_idx, batch in enumerate(val_dataloader):
             inputs1, input2, targets, filename, height, width = batch
-            print(torch.max(inputs1), torch.min(inputs1))
-            print(torch.max(targets), torch.min(targets))
             height, width, filename = height.numpy()[0], width.numpy()[0], filename[0]
             if device.type == 'cuda':
                 inputs1, input2, targets = inputs1.cuda(), input2.cuda(), targets.cuda()
