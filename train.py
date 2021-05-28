@@ -134,7 +134,7 @@ def main():
     train_data = dates.Dataset(cfg.TRAIN_DATA_PATH, cfg.TRAIN_LABEL_PATH, cfg.TRAIN_TXT_PATH, 'train', transform=True, transform_med=train_transform_det)
     train_loader = Data.DataLoader(train_data, batch_size=cfg.BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
     val_data = dates.Dataset(cfg.VAL_DATA_PATH, cfg.VAL_LABEL_PATH, cfg.VAL_TXT_PATH, 'val', transform=True, transform_med=val_transform_det)
-    val_loader = Data.DataLoader(val_data, batch_size=2, shuffle=False, num_workers=1, pin_memory=True)
+    val_loader = Data.DataLoader(val_data, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
     ######  build  models ########
     base_seg_model = 'resnet50'
     if base_seg_model == 'vgg':
