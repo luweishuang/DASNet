@@ -1,60 +1,25 @@
 import torch
 import torchvision 
 import numpy as np
-import torch.nn.functional as F
 import torch.nn as nn
-from torch.autograd import Variable
-# import model.vgg1024 as vgg
-# import model.deeplab_msc_coco as attmodel
 import json
 import cv2
-#import pydensecrf.densecrf as dcrf
 import os
 
-# def load_deeplab_v2(model_file):
-#
-#     model = deeplab_v2.deeplab_vgg_v2()
-#     state_dict = torch.load(model_file)
-#     model.load_state_dict(state_dict)
-#     print('deeplabv2 has been load')
-#     return model
 
 def load_pretrain_model(model_file):
-
    model = torchvision.models.vgg16(pretrained=False)
    state_dict = torch.load(model_file)
    model.load_state_dict(state_dict)
    print('model has been load')
    return model
 
-# def load_pretrain_coco_attention_model(model_file):
-#
-#     model = attmodel.Deeplab_MS_Att_Scale(class_number=91)
-#     state_dict = torch.load(model_file)
-#     model.load_state_dict(state_dict)
-#     print('model has been load')
-#     return model
-
-# def load_deeplab_pretrain_model(model_file):
-#
-#    model = vgg.vgg1024()
-#    state_dict = torch.load(model_file)
-#    model.load_state_dict(state_dict)
-#    print('model has been load')
-#    return model
-#
-# def load_deeplab_best_metric_model(model_file):
-#
-#     model = deeplab.deeplab()
-#     state_dict = torch.load(model_file)
-#     model.load_state_dict(state_dict['state_dict'])
-#     print('model has been load')
-#     return model
 
 def check_dir(dir):
+    os.makedirs(dir, exist_ok=True)
+    # if not os.path.exists(dir):
+    #     os.mkdir(dir)
 
-    if not os.path.exists(dir):
-        os.mkdir(dir)
 
 def adjust_learning_rate(learning_rate,optimizer, step):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -63,14 +28,15 @@ def adjust_learning_rate(learning_rate,optimizer, step):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-def adaptive_select_gamma(epoch):
 
+def adaptive_select_gamma(epoch):
     #gammas = [0,0.5,1,2,5]
     if epoch >= 10:
         gamma = 4
     else:
         gamma = 0
     return gamma
+
 
 def poly_lr_scheduler(optimizer, init_lr, iter, lr_decay_iter=1, max_iter=30000, power=0.9,):
     """Polynomial decay of learning rate
@@ -79,26 +45,26 @@ def poly_lr_scheduler(optimizer, init_lr, iter, lr_decay_iter=1, max_iter=30000,
         :param lr_decay_iter how frequently decay occurs, default is 1
         :param max_iter is number of maximum iterations
         :param power is a polymomial power
-
     """
     if iter % lr_decay_iter or iter > max_iter:
         return optimizer
-
     for param_group in optimizer.param_groups:
         param_group['lr'] = init_lr*(1 - iter/max_iter)**power
+
 
 def save2json(metric_dict,save_path):
     file_ = open(save_path,'w')
     file_.write(json.dumps(metric_dict,ensure_ascii=False,indent=2))
     file_.close()
 
+
 def load_metric_json(json_path):
     with open(json_path,'r') as f:
         metric = json.load(f)
     return  metric
 
-def init_metric_for_testing_different_threshold_cd2014():
 
+def init_metric_for_testing_different_threshold_cd2014():
     metric_for_various_camera_conditions = {}
     condition_names = ['continuousPan','intermittentPan','twoPositionPTZCam','zoomInZoomOut']
     for name in condition_names:
@@ -114,8 +80,8 @@ def init_metric_for_testing_different_threshold_cd2014():
 
     return metric_for_various_camera_conditions
 
-def init_metric_for_class_for_cd2014(number_class):
 
+def init_metric_for_class_for_cd2014(number_class):
     metric_for_various_condition = {}
     condition_names = ['badWeather','baseline','cameraJitter','dynamicBackground','intermittentObjectMotion',
                        'lowFramerate','nightVideos','PTZ','shadow','thermal','turbulence']
@@ -134,11 +100,10 @@ def init_metric_for_class_for_cd2014(number_class):
             metric_for_each.setdefault('total_negnum', 0)
             metric_for_class.setdefault(i, metric_for_each)
         metric_for_various_condition.setdefault(names,metric_for_class)
-
     return metric_for_various_condition
 
-def init_metric_for_class_for_cmu(number_class):
 
+def init_metric_for_class_for_cmu(number_class):
     metric_for_class = {}
     for i in range(number_class):
         metric_for_each = {}
@@ -152,12 +117,11 @@ def init_metric_for_class_for_cmu(number_class):
         metric_for_class.setdefault(i, metric_for_each)
     return metric_for_class
 
-def init_metric_for_class(number_class):
 
+def init_metric_for_class(number_class):
     metric_for_class = {}
     name = ['NoChange','Change']
     for i in range(int(number_class)):
-
         metric_for_each = {}
         thresh = np.array(range(0, 256)) / 255.0
         total_fp = np.zeros(thresh.shape)
@@ -168,11 +132,10 @@ def init_metric_for_class(number_class):
         metric_for_each.setdefault('total_posnum',0)
         metric_for_each.setdefault('total_negnum',0)
         metric_for_class.setdefault(i,metric_for_each)
-
     return metric_for_class
 
-def attention_weights_collection(attention_weights):
 
+def attention_weights_collection(attention_weights):
     loc_weights_dict = {}
     locs,height,width = attention_weights.shape
     for idx in range(locs):
@@ -185,13 +148,11 @@ def attention_weights_collection(attention_weights):
        else:
            loc_attention = loc_attention_vec.reshape(height,width)
        loc_weights_dict.setdefault(idx,loc_attention)
-
     return loc_weights_dict
 
+
 def attention_weights_visulize(weights_dict,original_img,save_base_path):
-
     for idx,loc_attention_weight_vec in weights_dict.iteritems():
-
         height, width, channel = original_img.shape
         alpha_att_map = cv2.resize(loc_attention_weight_vec, (width,height), interpolation=cv2.INTER_LINEAR)
         alpha_att_map_ = cv2.applyColorMap(np.uint8(255 * alpha_att_map), cv2.COLORMAP_JET)
@@ -199,14 +160,13 @@ def attention_weights_visulize(weights_dict,original_img,save_base_path):
         cv2.imwrite(save_base_path + '_' + str(idx) + '.jpg',fuse_heat_map)
         #print idx
 
-def various_scale_attention_weights_visualize(spatial_weights,original_img1,original_img2,save_base_path,filename):
 
+def various_scale_attention_weights_visualize(spatial_weights,original_img1,original_img2,save_base_path,filename):
     nchannel, height,width = spatial_weights.shape
     scale_list = ['common','t0','t1']
     original_imgs = [original_img1,original_img1,original_img2]
     assert len(scale_list) == len(spatial_weights)
     for idx in range(nchannel):
-
         height_img, width_img, channel = original_imgs[idx].shape
         scale_x = spatial_weights[idx]
         scale_name = scale_list[idx]
@@ -216,18 +176,8 @@ def various_scale_attention_weights_visualize(spatial_weights,original_img1,orig
         cv2.imwrite(save_base_path + '_' + str(filename) + '_origin_' + str(scale_name) + '.jpg', scalex_x_att_map_)
         cv2.imwrite(save_base_path + '_' + str(filename) + '_fuse_' + str(scale_name) + '.jpg', fuse_scale_att_map)
 
-# def resize_label(label, size):
-#
-#     label = np.expand_dims(label,axis=0)
-#     label_resized = np.zeros((1,label.shape[0],size[0],size[1]))
-#     #labelVar = torch.from_numpy(label).float()
-#     labelVar = torch.from_numpy(label).float()
-#     label_resized[:, :,:,:] = nn.functional.interpolate(labelVar,size=(size[0], size[1]),mode='bilinear',align_corners=True ).data.numpy()
-#     label_resized = np.array(label_resized, dtype=np.int32)
-#     return torch.from_numpy(np.squeeze(label_resized,axis=0)).float()
 
 def rz_label(label, size):
-
     gt_e = torch.unsqueeze(label,dim=1)
     interp = nn.functional.interpolate(gt_e,(size[0],size[1]),mode='bilinear',align_corners=True)
     gt_rz = torch.squeeze(interp,dim=1)

@@ -1,5 +1,7 @@
+import sys, os
 import torch.nn as nn
 import torch.nn.functional as F
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from attention import *
 
 
@@ -30,7 +32,6 @@ class deeplab_V2(nn.Module):
             nn.Conv2d(in_channels=64,out_channels=64,kernel_size=3,padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3,stride=2,padding=1,ceil_mode=True),
-
         )
         self.conv2 = nn.Sequential(
             nn.Conv2d(in_channels=64,out_channels=128,kernel_size=3,padding=1),
@@ -38,7 +39,6 @@ class deeplab_V2(nn.Module):
             nn.Conv2d(in_channels=128,out_channels=128,kernel_size=3,padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3,stride=2,padding=1,ceil_mode=True),
-
         )
         self.conv3 = nn.Sequential(
             nn.Conv2d(in_channels=128,out_channels=256,kernel_size=3,padding=1),
@@ -48,7 +48,6 @@ class deeplab_V2(nn.Module):
             nn.Conv2d(in_channels=256,out_channels=256,kernel_size=3,padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3,stride=2,padding=1,ceil_mode=True),
-
         )
         self.conv4 = nn.Sequential(
             nn.Conv2d(in_channels=256,out_channels=512,kernel_size=3,padding=1),
@@ -58,7 +57,6 @@ class deeplab_V2(nn.Module):
             nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=1, padding=1, ceil_mode=True),
-
         )
         self.conv5 = nn.Sequential(
             nn.Conv2d(in_channels=512,out_channels=512,kernel_size=3,dilation=2,padding=2),
@@ -67,73 +65,64 @@ class deeplab_V2(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, dilation=2, padding=2),
             nn.ReLU(inplace=True),
-
         )
         inter_channels = 512 // 4
         self.conv5a = nn.Sequential(nn.Conv2d(512, inter_channels, 3, padding=1, bias=False), nn.ReLU())
-
         self.conv5c = nn.Sequential(nn.Conv2d(512, inter_channels, 3, padding=1, bias=False), nn.ReLU())
-
         self.sa = PAM_Module(inter_channels)
         self.sc = CAM_Module(inter_channels)
-        self.conv51 = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
-
-                                   nn.ReLU())
-        self.conv52 = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
-
-                                   nn.ReLU())
-
+        self.conv51 = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False), nn.ReLU())
+        self.conv52 = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False), nn.ReLU())
         self.conv6 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(128, 128, 1))
         self.conv7 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(128, 128, 1))
-
         self.conv8 = nn.Sequential(nn.Dropout2d(0.1, False), nn.Conv2d(128, 128, 1))
 
         ####### multi-scale contexts #######
         ####### dialtion = 6 ##########
-        self.fc6_1 = nn.Sequential(
-            nn.Conv2d(in_channels=512,out_channels=1024,kernel_size=3,dilation=6,padding=6),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        self.fc7_1 = nn.Sequential(
-            nn.Conv2d(in_channels=1024,out_channels=1024,kernel_size=1),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        ####### dialtion = 12 ##########
-        self.fc6_2 = nn.Sequential(
-            nn.Conv2d(in_channels=512,out_channels=1024,kernel_size=3,dilation=12,padding=12),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        self.fc7_2 = nn.Sequential(
-            nn.Conv2d(in_channels=1024,out_channels=1024,kernel_size=1),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        ####### dialtion = 18 ##########
-        self.fc6_3 = nn.Sequential(
-            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, dilation=18, padding=18),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        self.fc7_3 = nn.Sequential(
-            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        ####### dialtion = 24 ##########
-        self.fc6_4 = nn.Sequential(
-            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, dilation=24, padding=24),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        self.fc7_4 = nn.Sequential(
-            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5)
-        )
-        self.embedding_layer = nn.Conv2d(in_channels=512,out_channels=512,kernel_size=1)
+        # self.fc6_1 = nn.Sequential(
+        #     nn.Conv2d(in_channels=512,out_channels=1024,kernel_size=3,dilation=6,padding=6),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # self.fc7_1 = nn.Sequential(
+        #     nn.Conv2d(in_channels=1024,out_channels=1024,kernel_size=1),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # ####### dialtion = 12 ##########
+        # self.fc6_2 = nn.Sequential(
+        #     nn.Conv2d(in_channels=512,out_channels=1024,kernel_size=3,dilation=12,padding=12),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # self.fc7_2 = nn.Sequential(
+        #     nn.Conv2d(in_channels=1024,out_channels=1024,kernel_size=1),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # ####### dialtion = 18 ##########
+        # self.fc6_3 = nn.Sequential(
+        #     nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, dilation=18, padding=18),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # self.fc7_3 = nn.Sequential(
+        #     nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # ####### dialtion = 24 ##########
+        # self.fc6_4 = nn.Sequential(
+        #     nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, dilation=24, padding=24),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # self.fc7_4 = nn.Sequential(
+        #     nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5)
+        # )
+        # self.embedding_layer = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=1)
         #self.fc8 = nn.Softmax2d()
         #self.fc8 = fun.l2normalization(scale=1)
 
@@ -158,7 +147,7 @@ class deeplab_V2(nn.Module):
 
 
 class SiameseNet(nn.Module):
-    def __init__(self, norm_flag = 'l2'):
+    def __init__(self, norm_flag='l2'):
         super(SiameseNet, self).__init__()
         self.CNN = deeplab_V2()
         if norm_flag == 'l2':
@@ -166,15 +155,15 @@ class SiameseNet(nn.Module):
         if norm_flag == 'exp':
             self.norm = nn.Softmax2d()
 
-    def forward(self,t0,t1):
-        out_t0_conv5,out_t0_fc7,out_t0_embedding = self.CNN(t0)
-        out_t1_conv5,out_t1_fc7,out_t1_embedding = self.CNN(t1)
-        out_t0_conv5_norm,out_t1_conv5_norm = self.norm(out_t0_conv5,2,dim=1),self.norm(out_t1_conv5,2,dim=1)
-        out_t0_fc7_norm,out_t1_fc7_norm = self.norm(out_t0_fc7,2,dim=1),self.norm(out_t1_fc7,2,dim=1)
-        out_t0_embedding_norm,out_t1_embedding_norm = self.norm(out_t0_embedding,2,dim=1),self.norm(out_t1_embedding,2,dim=1)
-        return [out_t0_conv5_norm,out_t1_conv5_norm],[out_t0_fc7_norm,out_t1_fc7_norm],[out_t0_embedding_norm,out_t1_embedding_norm]
+    def forward(self, t0, t1):
+        out_t0_conv5, out_t0_fc7, out_t0_embedding = self.CNN(t0)
+        out_t1_conv5, out_t1_fc7, out_t1_embedding = self.CNN(t1)
+        out_t0_conv5_norm, out_t1_conv5_norm = self.norm(out_t0_conv5, 2, dim=1), self.norm(out_t1_conv5,2,dim=1)
+        out_t0_fc7_norm, out_t1_fc7_norm = self.norm(out_t0_fc7, 2, dim=1), self.norm(out_t1_fc7,2,dim=1)
+        out_t0_embedding_norm, out_t1_embedding_norm = self.norm(out_t0_embedding, 2, dim=1),self.norm(out_t1_embedding,2,dim=1)
+        return [out_t0_conv5_norm, out_t1_conv5_norm], [out_t0_fc7_norm,out_t1_fc7_norm],[out_t0_embedding_norm,out_t1_embedding_norm]
 
-    def init_parameters_from_deeplab(self,pretrain_vgg16_1024):
+    def init_parameters_from_deeplab(self, pretrain_vgg16_1024):
         ##### init parameter using pretrain vgg16 model ###########
         pretrain_dict_names = convert_dict_names_for_fucking_faults()
         keys = sorted(pretrain_dict_names.keys())
@@ -238,7 +227,6 @@ class SiameseNet(nn.Module):
                     l2.bias.data = l1.bias.data
 
         ####### init fc parameters (transplant) ##############
-        #
         self.CNN.fc6[0].weight.data = pretrain_vgg16_1024.classifier[0].weight.data.view(self.CNN.fc6[0].weight.size())
         self.CNN.fc6[0].bias.data = pretrain_vgg16_1024.classifier[0].bias.data.view(self.CNN.fc6[0].bias.size())
 

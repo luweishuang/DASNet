@@ -1,7 +1,7 @@
 from __future__ import division
 import os, sys
 import torch.nn as nn
-sys.path.append(os.path.abspath(os.path.dirname(__file__)) )
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from attention import PAM_Module
 from attention import CAM_Module
 from resbase import BaseNet
