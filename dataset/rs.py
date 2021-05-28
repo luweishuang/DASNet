@@ -91,36 +91,34 @@ class Dataset(Dataset):
         self.img_label_path_pairs = self.get_img_label_path_pairs()
 
     def get_img_label_path_pairs(self):
-
         img_label_pair_list = {}
         if self.flag =='train':
-            for idx , did in enumerate(open(self.img_txt_path)):
-                try:
-                    image1_name,image2_name,mask_name = did.strip("\n").split(' ')
-                except ValueError:  # Adhoc for test.
-                    image_name = mask_name = did.strip("\n")
-                extract_name = image1_name[image1_name.rindex('/') +1: image1_name.rindex('.')]
-                img1_file = os.path.join(self.img_path , image1_name)
-                img2_file = os.path.join(self.img_path , image2_name)
-                lbl_file = os.path.join(self.label_path, mask_name)
-                img_label_pair_list.setdefault(idx, [img1_file,img2_file,lbl_file,image2_name])
-
-        if self.flag == 'val':
-            self.label_ext = '.png'
             for idx , did in enumerate(open(self.img_txt_path)):
                 try:
                     image1_name, image2_name, mask_name = did.strip("\n").split(' ')
                 except ValueError:  # Adhoc for test.
                     image_name = mask_name = did.strip("\n")
                 extract_name = image1_name[image1_name.rindex('/') +1: image1_name.rindex('.')]
-                img1_file = os.path.join(self.img_path , image1_name)
-                img2_file = os.path.join(self.img_path , image2_name)
-                lbl_file = os.path.join(self.label_path , mask_name)
+                img1_file = os.path.join(self.img_path, image1_name)
+                img2_file = os.path.join(self.img_path, image2_name)
+                lbl_file = os.path.join(self.label_path, mask_name)
                 img_label_pair_list.setdefault(idx, [img1_file,img2_file,lbl_file,image2_name])
 
+        if self.flag == 'val':
+            self.label_ext = '.png'
+            for idx, did in enumerate(open(self.img_txt_path)):
+                try:
+                    image1_name, image2_name, mask_name = did.strip("\n").split(' ')
+                except ValueError:  # Adhoc for test.
+                    image_name = mask_name = did.strip("\n")
+                extract_name = image1_name[image1_name.rindex('/') +1: image1_name.rindex('.')]
+                img1_file = os.path.join(self.img_path, image1_name)
+                img2_file = os.path.join(self.img_path, image2_name)
+                lbl_file = os.path.join(self.label_path, mask_name)
+                img_label_pair_list.setdefault(idx, [img1_file, img2_file, lbl_file, image2_name])
         return img_label_pair_list
 
-    def data_transform(self, img1,img2,lbl):
+    def data_transform(self, img1, img2, lbl):
         img1 = img1[:, :, ::-1]  # RGB -> BGR
         img1 = img1.astype(np.float64)
         img1 -= cfg.T0_MEAN_VALUE
@@ -133,40 +131,31 @@ class Dataset(Dataset):
         img2 = torch.from_numpy(img2).float()
         lbl = torch.from_numpy(lbl).long()
         #lbl_reverse = torch.from_numpy(lbl_reverse).long()
-        return img1,img2,lbl
+        return img1, img2, lbl
 
     def __getitem__(self, index):
-
-        img1_path,img2_path,label_path,filename = self.img_label_path_pairs[index]
+        img1_path, img2_path, label_path, filename = self.img_label_path_pairs[index]
         ####### load images #############
         img1 = Image.open(img1_path)
         img2 = Image.open(img2_path)
-        height,width,_ = np.array(img1,dtype= np.uint8).shape
+        height, width, _ = np.array(img1, dtype=np.uint8).shape
         if self.transform_med != None:
            img1 = self.transform_med(img1)
            img2 = self.transform_med(img2)
-        img1 = np.array(img1,dtype= np.uint8)
-        img2 = np.array(img2,dtype= np.uint8)
+        img1 = np.array(img1, dtype=np.uint8)
+        img2 = np.array(img2, dtype=np.uint8)
         ####### load labels ############
-        if self.flag == 'train':
-
+        if self.flag == 'train' or self.flag == 'val':
             label = Image.open(label_path)
             if self.transform_med != None:
                 label = self.transform_med(label)
-            label = np.array(label,dtype=np.int32)
-
-        if self.flag == 'val':
-            label = Image.open(label_path)
-            if self.transform_med != None:
-               label = self.transform_med(label)
-            label = np.array(label,dtype=np.int32)
-
+            label1 = np.array(label, dtype=np.int32)/255.0
+            label = label1.astype(np.int32)
         if self.transform:
-            img1,img2,label = self.data_transform(img1,img2,label)
+            img1, img2, label = self.data_transform(img1, img2, label)
 
-        return img1,img2,label,str(filename),int(height),int(width)
+        return img1, img2, label, str(filename), int(height), int(width)
 
     def __len__(self):
-
         return len(self.img_label_path_pairs)
 
