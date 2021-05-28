@@ -6,6 +6,7 @@ from torch.nn import functional as F
 import utils.utils as util
 import numpy as np
 import utils.metric as mc
+import time, datetime
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -56,7 +57,11 @@ def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir, tran
             height, width, filename = height.numpy()[0], width.numpy()[0], filename[0]
             if device.type == 'cuda':
                 inputs1, input2, targets = inputs1.cuda(), input2.cuda(), targets.cuda()
+            time_start = time.time()
             out_conv5, out_fc, out_embedding = net(inputs1, input2)
+            elapsed = round(time.time() - time_start)
+            elapsed = str(datetime.timedelta(seconds=elapsed))
+            print('batch_idx: {}, validate net calc Elapsed {}'.format(batch_idx, elapsed))
             out_conv5_t0, out_conv5_t1 = out_conv5
             out_fc_t0, out_fc_t1 = out_fc
             out_embedding_t0, out_embedding_t1 = out_embedding
