@@ -136,7 +136,7 @@ def main():
     train_loader = Data.DataLoader(train_data, batch_size=cfg.BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
     val_data = dates.Dataset(cfg.VAL_DATA_PATH, cfg.VAL_LABEL_PATH,
                             cfg.VAL_TXT_PATH, 'val', transform=True, transform_med=val_transform_det)
-    val_loader = Data.DataLoader(val_data, batch_size=20, shuffle=False, num_workers=4, pin_memory=True)
+    val_loader = Data.DataLoader(val_data, batch_size=4, shuffle=False, num_workers=4, pin_memory=True)
     ######  build  models ########
     base_seg_model = 'resnet50'
     if base_seg_model == 'vgg':
@@ -161,6 +161,7 @@ def main():
         else:
             print('load resnet50')
     if device.type == 'cuda':
+        print("use cuda!")
         model = model.cuda()
     MaskLoss = ls.ContrastiveLoss1()
     ab_test_dir = os.path.join(cfg.SAVE_PRED_PATH, 'contrastive_loss')
@@ -186,7 +187,7 @@ def main():
              if device.type == 'cuda':
                  img1, img2, label = img1.cuda(), img2.cuda(), label.cuda()
              label = label.float()
-             out_conv5, out_fc, out_embedding = model(img1, img2)
+             out_conv5, out_fc, out_embedding = model(img1.cuda(), img2.cuda())
              out_conv5_t0, out_conv5_t1 = out_conv5
              out_fc_t0, out_fc_t1 = out_fc
              out_embedding_t0,out_embedding_t1 = out_embedding
@@ -233,4 +234,5 @@ def main():
 
 
 if __name__ == '__main__':
+    torch.backends.cudnn.enabled = False 
     main()
