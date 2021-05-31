@@ -66,7 +66,6 @@ def evalExp(gtBin, cur_prob, thres, validMap=None, validArea=None):
     :param thres:
     :param validMap:
     '''
-
     assert len(cur_prob.shape) == 2, 'Wrong size of input prob map'
     assert len(gtBin.shape) == 2, 'Wrong size of input prob map'
     thresInf = np.concatenate(([-np.Inf], thres, [np.Inf]))
@@ -171,7 +170,7 @@ def pxEval_maximizeFMeasure(totalPosNum, totalNegNum, totalFN, totalFP, thresh=N
     valuesMaxF[0, 2] = FP
     valuesMaxF[0, 3] = FN
 
-    ACC = (totalTP+ totalTN)/(totalPosNum+totalNegNum)
+    ACC = (totalTP + totalTN)/(totalPosNum+totalNegNum)
     prob_eval_scores = calcEvalMeasures(valuesMaxF)
     #prob_eval_scores['AvgPrec'] = AvgPrec
     prob_eval_scores['MaxF'] = MaxF
@@ -190,7 +189,6 @@ def pxEval_maximizeFMeasure(totalPosNum, totalNegNum, totalFN, totalFP, thresh=N
         BestThresh = thresh[index]
         prob_eval_scores['BestThresh'] = BestThresh
         print(BestThresh)
-
     # return a dict
     return prob_eval_scores
 
@@ -373,10 +371,7 @@ def eval_image(gt_image, cnn_image):
     road_gt = gt_image[:, :] > 0
     valid_gt = gt_image[:, :] > 0
 
-    FN, FP, posNum, negNum = evalExp(road_gt, cnn_image,
-                                     thresh, validMap=None,
-                                     validArea=valid_gt)
-
+    FN, FP, posNum, negNum = evalExp(road_gt, cnn_image, thresh, validMap=None, validArea=valid_gt)
     return FN, FP, posNum, negNum
 
 
@@ -385,9 +380,7 @@ def eval_image_rewrite(gt_image, prob, cl_index):
     cl_gt = gt_image[:, :] == cl_index
     valid_gt = gt_image[:, :] != 255
 
-    FN, FP, posNum, negNum = evalExp(cl_gt, prob,
-                                     thresh, validMap=None,
-                                     validArea=valid_gt)
+    FN, FP, posNum, negNum = evalExp(cl_gt, prob, thresh, validMap=None, validArea=valid_gt)
     return FN, FP, posNum, negNum
 
 

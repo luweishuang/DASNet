@@ -103,7 +103,6 @@ class Dataset(Dataset):
                 img2_file = os.path.join(self.img_path, image2_name)
                 lbl_file = os.path.join(self.label_path, mask_name)
                 img_label_pair_list.setdefault(idx, [img1_file,img2_file,lbl_file,image2_name])
-
         if self.flag == 'val':
             self.label_ext = '.png'
             for idx, did in enumerate(open(self.img_txt_path)):
@@ -116,6 +115,12 @@ class Dataset(Dataset):
                 img2_file = os.path.join(self.img_path, image2_name)
                 lbl_file = os.path.join(self.label_path, mask_name)
                 img_label_pair_list.setdefault(idx, [img1_file, img2_file, lbl_file, image2_name])
+        if self.flag == 'test':
+            for idx, did in enumerate(open(self.img_txt_path)):
+                image1_name, image2_name = did.strip("\n").split(' ')
+                img1_file = os.path.join(self.img_path, image1_name)
+                img2_file = os.path.join(self.img_path, image2_name)
+                img_label_pair_list.setdefault(idx, [img1_file, img2_file, None, image2_name])
         return img_label_pair_list
 
     def data_transform(self, img1, img2, lbl):

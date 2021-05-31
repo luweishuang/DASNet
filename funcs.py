@@ -49,6 +49,7 @@ def single_layer_similar_heatmap_visual(output_t0, output_t1, save_change_map_di
 def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir, transform_scale):
     net.eval()
     with torch.no_grad():
+        # cont_conv5_mean, cont_fc_mean, cont_embedding_mean = 0.0, 0.0, 0.0
         cont_conv5_total, cont_fc_total, cont_embedding_total, num = 0.0, 0.0, 0.0, 0.0
         metric_for_conditions = util.init_metric_for_class_for_cmu(1)
         for batch_idx, batch in enumerate(val_dataloader):
@@ -113,3 +114,34 @@ def validate(net, val_dataloader, epoch, save_change_map_dir, save_roc_dir, tran
 
         print(f_score_total/(len(conds)))
         return f_score_total/len(conds)
+
+
+def test(net, test_dataloader, epoch, save_change_map_dir, save_roc_dir, transform_scale):
+    net.eval()
+    with torch.no_grad():
+        cont_conv5_total, cont_fc_total, cont_embedding_total, num = 0.0, 0.0, 0.0, 0.0
+        for batch_idx, batch in enumerate(test_dataloader):
+            inputs1, input2, _, filename, height, width = batch
+            height, width, filename = height.numpy()[0], width.numpy()[0], filename[0]
+            if device.type == 'cuda':
+                inputs1, input2 = inputs1.cuda(), input2.cuda()
+            fname = filename.split('/')[-1]
+            time_start = time.time()
+            out_conv5, out_fc, out_embedding = net(inputs1, input2)
+            elapsed = round(time.time() - time_start)
+            elapsed = str(datetime.timedelta(seconds=elapsed))
+            # print('batch_idx: {}, validate net calc Elapsed {}'.format(batch_idx, elapsed))
+            out_conv5_t0, out_conv5_t1 = out_conv5
+            out_fc_t0, out_fc_t1 = out_fc
+            out_embedding_t0, out_embedding_t1 = out_embedding
+            conv5_distance_map = single_layer_similar_heatmap_visual(out_conv5_t0, out_conv5_t1, save_change_map_dir, epoch, fname, 'conv5', 'l2', transform_scale)
+            fc_distance_map = single_layer_similar_heatmap_visual(out_fc_t0, out_fc_t1, save_change_map_dir, epoch, fname, 'fc', 'l2', transform_scale)
+            embedding_distance_map = single_layer_similar_heatmap_visual(out_embedding_t0, out_embedding_t1, save_change_map_dir, epoch, fname, 'embedding', 'l2', transform_scale)
+            cont_conv5 = mc.RMS_Contrast(conv5_distance_map)
+            cont_fc = mc.RMS_Contrast(fc_distance_map)
+            cont_embedding = mc.RMS_Contrast(embedding_distance_map)
+            cont_conv5_total += cont_conv5
+            cont_fc_total += cont_fc
+            cont_embedding_total += cont_embedding
+            num += 1
+        return 0.0
