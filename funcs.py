@@ -30,7 +30,6 @@ def various_distance(out_vec_t0, out_vec_t1, dist_flag):
 
 
 def single_layer_similar_heatmap_visual(output_t0, output_t1, save_change_map_dir, epoch, filename, layer_flag, dist_flag, transform_scale):
-    fname = filename[7:12]
     n, c, h, w = output_t0.data.shape
     out_t0_rz = torch.transpose(output_t0.view(c, h * w), 1, 0)
     out_t1_rz = torch.transpose(output_t1.view(c, h * w), 1, 0)

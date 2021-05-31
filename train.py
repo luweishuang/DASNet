@@ -109,10 +109,8 @@ def main():
                      best_metric = current_metric
         current_metric = validate(model, val_loader, epoch, save_change_map_dir, save_roc_dir, cfg.TRANSFROM_SCALES)
         if current_metric > best_metric:
-            torch.save({'state_dict': model.state_dict()},
-                     os.path.join(ab_test_dir, 'model' + str(epoch) + '.pth'))
-            shutil.copy(os.path.join(ab_test_dir, 'model' + str(epoch) + '.pth'),
-                     os.path.join(ab_test_dir, 'model_best.pth'))
+            torch.save({'state_dict': model.state_dict()}, os.path.join(ab_test_dir, 'model' + str(epoch) + '.pth'))
+            shutil.copy(os.path.join(ab_test_dir, 'model' + str(epoch) + '.pth'), os.path.join(ab_test_dir, 'model_best.pth'))
             best_metric = current_metric
         if epoch % 5 == 0:
             torch.save({'state_dict': model.state_dict()}, os.path.join(ab_test_dir, 'model' + str(epoch) + '.pth'))

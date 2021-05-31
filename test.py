@@ -19,6 +19,9 @@ def main():
     val_data = dates.Dataset(os.path.join(BASE_PATH, 'changedetection/SceneChangeDet/CDD'), os.path.join(BASE_PATH, 'changedetection/SceneChangeDet/CDD'),
                              os.path.join(BASE_PATH, 'changedetection/SceneChangeDet/CDD/val_small.txt'), 'val',
                              transform=True, transform_med=val_transform_det)
+    # val_data = dates.Dataset(os.path.join(BASE_PATH, 'changedetection/SceneChangeDet/back_42fps'), os.path.join(BASE_PATH, 'changedetection/SceneChangeDet/back_42fps'),
+    #                          os.path.join(BASE_PATH, 'changedetection/SceneChangeDet/back_42fps/val.txt'), 'val',
+    #                          transform=True, transform_med=val_transform_det)
     val_loader = Data.DataLoader(val_data, batch_size=1, shuffle=False, num_workers=4, pin_memory=True)
 
     # import model.siameseNet.dares as models
@@ -32,7 +35,7 @@ def main():
     save_change_map_dir = os.path.join(cfg.SAVE_PRED_PATH, 'contrastive_loss/changemaps/')
     save_roc_dir = os.path.join(cfg.SAVE_PRED_PATH, 'contrastive_loss/roc')
     time_start = time.time()
-    current_metric = validate(model, val_loader, 100, save_change_map_dir, save_roc_dir, cfg.TRANSFROM_SCALES)
+    current_metric = validate(model, val_loader, 100, save_change_map_dir, save_roc_dir, cfg.TRANSFROM_SCALES)  # (800, 600))
     elapsed = round(time.time() - time_start)
     elapsed = str(datetime.timedelta(seconds=elapsed))
     print('Elapsed {}'.format(elapsed))

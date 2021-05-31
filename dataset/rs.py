@@ -151,6 +151,8 @@ class Dataset(Dataset):
                 label = self.transform_med(label)
             label1 = np.array(label, dtype=np.int32)/255.0
             label = label1.astype(np.int32)
+        else:
+            label = np.zeros((height, width, 3), dtype=np.int32)
         if self.transform:
             img1, img2, label = self.data_transform(img1, img2, label)
 
